@@ -122,7 +122,7 @@ MVP 永远是 baseline 的投影，不覆盖 baseline。原型返回时，Final 
 ### 使用 skills CLI 安装
 
 ```bash
-npx skills@latest add Reese0302/fragile-question-map
+npx skills@latest add yarneer/fragile-question-map
 ```
 
 在交互式安装器中选择要安装的宿主。安装后重新加载 skills 列表，然后使用 `$fragile-question-map` 调用。
