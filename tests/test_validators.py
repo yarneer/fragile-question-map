@@ -245,5 +245,53 @@ class ReportAndInputTests(FixtureCase):
         self.assertIn("ERROR: invalid JSON", stderr)
 
 
+class ListMapsTests(unittest.TestCase):
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+
+    def add_map(self, name, source=FIXTURE, mtime=None):
+        target = os.path.join(self.root, ".question-map", name)
+        shutil.copytree(source, target)
+        map_path = os.path.join(target, "question-map.json")
+        if mtime is not None:
+            os.utime(map_path, (mtime, mtime))
+        return map_path
+
+    def test_no_maps(self):
+        code, stdout, stderr = run("list-question-maps.py", self.root)
+        self.assertEqual(code, 0, stderr)
+        self.assertIn("No Question Maps found", stdout)
+
+    def test_lists_most_recent_first(self):
+        self.add_map("older", mtime=1_700_000_000)
+        self.add_map("newer", source=EXAMPLE, mtime=1_800_000_000)
+        code, stdout, stderr = run("list-question-maps.py", self.root)
+        self.assertEqual(code, 0, stderr)
+        self.assertLess(stdout.index(".question-map/newer/"), stdout.index(".question-map/older/"))
+        self.assertIn("| qm-fragile-learn-interaction | active | evidence_received @ N4 |", stdout)
+        self.assertIn("| qm-test | fully_verified | accepted @ N1 |", stdout)
+
+    def test_unreadable_map_does_not_hide_others(self):
+        self.add_map("good")
+        broken = os.path.join(self.root, ".question-map", "broken")
+        os.makedirs(broken)
+        with open(os.path.join(broken, "question-map.json"), "w", encoding="utf-8") as handle:
+            handle.write("{")
+        code, stdout, stderr = run("list-question-maps.py", self.root)
+        self.assertEqual(code, 0, stderr)
+        self.assertIn("| .question-map/broken/question-map.json | unreadable |", stdout)
+        self.assertIn("qm-test", stdout)
+
+    def test_defaults_to_current_directory(self):
+        self.add_map("here")
+        result = subprocess.run([sys.executable, os.path.join(SCRIPTS, "list-question-maps.py")],
+                                cwd=self.root, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(".question-map/here/question-map.json", result.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()
