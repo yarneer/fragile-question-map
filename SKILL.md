@@ -19,7 +19,7 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 - 不在共享理解形成前执行方案；不把 Question Map 变成 backlog、路线图或完整跨 Seed 编排系统。
 - 不得自动启动 `$fragile-skill-prototype`；只在用户确认运行模式与 A/B/C 交接后提供显式调用入口。
 
-持久 JSON 必须先读 [references/question-map-schema.md](references/question-map-schema.md)，完成后运行 validator；需要摘要时运行只读 `scripts/report-question-map.ps1`。
+持久 JSON 必须先读 [references/question-map-schema.md](references/question-map-schema.md)，完成后运行 validator；需要摘要时运行只读 `scripts/report-question-map.py`。
 
 ## Workflow
 
@@ -110,10 +110,10 @@ Question Map 保存设计、验证、来源和回写关系。执行依赖以 tra
 
 ## Validation
 
-```powershell
-pwsh -File scripts/validate-question-map.ps1 -Path <question-map.json>
-pwsh -File scripts/validate-prototype-run-brief.ps1 -Path <prototype-run-brief.md>
-pwsh -File scripts/report-question-map.ps1 -Path <question-map.json>
+```bash
+python3 scripts/validate-question-map.py <question-map.json>
+python3 scripts/validate-prototype-run-brief.py <prototype-run-brief.md>
+python3 scripts/report-question-map.py <question-map.json>
 ```
 
 validator 的硬错误继续检查关系目标、Verify 证据门槛、MVP parent、delta target 和新 Intent 回挂；WARNING 只提示生命周期、closure、候选依赖或扩展字段风险，不阻断有效退出。报告脚本只读，不修改 JSON。

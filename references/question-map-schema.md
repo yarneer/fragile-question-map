@@ -177,9 +177,9 @@ Question Map 只保存最小迭代状态和稳定引用；完整 Brief 保存在
   "iteration": {
     "active_region_ref": "N1",
     "state": "ready_for_rerun",
-    "current_seed_ref": "F:/seeds/seed-v01-final.md",
-    "last_full_seed_ref": "F:/seeds/seed-v01-final.md",
-    "parent_seed_ref": "F:/seeds/seed-v01-final.md",
+    "current_seed_ref": "/Users/you/seeds/seed-v01-final.md",
+    "last_full_seed_ref": "/Users/you/seeds/seed-v01-final.md",
+    "parent_seed_ref": "/Users/you/seeds/seed-v01-final.md",
     "brief_ref": null,
     "iteration_number": 2,
     "rerun_count": 0,
@@ -235,9 +235,9 @@ Prototype Run Brief 的字段与 A/B/C 交接语义见 [prototype-iteration-hand
 
 运行：
 
-```powershell
-pwsh -File scripts/validate-question-map.ps1 -Path <question-map.json>
-pwsh -File scripts/validate-prototype-run-brief.ps1 -Path <prototype-run-brief.md>
+```bash
+python3 scripts/validate-question-map.py <question-map.json>
+python3 scripts/validate-prototype-run-brief.py <prototype-run-brief.md>
 ```
 
 validator 证明 JSON 结构、引用、Verify evidence 门槛、MVP parent、delta target、lifecycle 枚举和 WARNING 条件。它不证明策略正确、候选聚类质量、tracker native edge、真实写回副作用或模型会在每次对话中遵守流程。

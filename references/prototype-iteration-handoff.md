@@ -31,8 +31,8 @@ Draft Seed 只能展示或检查，不得更新 baseline、resolution、verifica
 
 运行：
 
-```powershell
-pwsh -File scripts/validate-prototype-run-brief.ps1 -Path <prototype-run-brief.md>
+```bash
+python3 scripts/validate-prototype-run-brief.py <prototype-run-brief.md>
 ```
 
 ## A/B/C 交接

@@ -157,15 +157,15 @@ $fragile-question-map
 
 ## 验证地图与交接 Brief
 
-持久化 Question Map 前，先阅读 [Question Map Schema](references/question-map-schema.md)。完成后，在本 Skill 目录运行：
+持久化 Question Map 前，先阅读 [Question Map Schema](references/question-map-schema.md)。完成后，在本 Skill 目录运行（需要 Python 3.8+，只依赖标准库，macOS / Linux / Windows 通用）：
 
-```powershell
-pwsh -File scripts/validate-question-map.ps1 -Path <question-map.json>
-pwsh -File scripts/validate-prototype-run-brief.ps1 -Path <prototype-run-brief.md>
-pwsh -File scripts/report-question-map.ps1 -Path <question-map.json>
+```bash
+python3 scripts/validate-question-map.py <question-map.json>
+python3 scripts/validate-prototype-run-brief.py <prototype-run-brief.md>
+python3 scripts/report-question-map.py <question-map.json>
 ```
 
-前两个命令验证结构与交接约束；`report-question-map.ps1` 只读地生成摘要，不修改地图。硬错误涵盖关系目标、Verify 证据门槛、MVP parent、delta target 和新 Intent 回挂；WARNING 不阻止有效退出，但需要人工判断其生命周期或范围风险。
+前两个命令验证结构与交接约束；`report-question-map.py` 只读地生成摘要，不修改地图。硬错误涵盖关系目标、Verify 证据门槛、MVP parent、delta target 和新 Intent 回挂；WARNING 不阻止有效退出，但需要人工判断其生命周期或范围风险。
 
 ## 与下游 Skill 的边界
 
