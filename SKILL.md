@@ -1,6 +1,6 @@
 ---
 name: fragile-question-map
-description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或当前对话建立轻量 Question Map；批量聚类问题区域，只选择一个区域进入一次一问，并在形成 delta 后管理有边界的 full/changed-slice 原型重跑、Prototype Run Brief、A/B/C 交接、返回 Seed 写回和显式接受。用于多个问题区域、决策/验证生命周期、明确纠正、跨 Seed 原型迭代或 closure/integration 判断；不用于清晰的单点实现，也不替代 grilling、fragile-skill-prototype、research、wayfinder、to-spec 或 to-tickets。
+description: 设计讨论同时牵涉多个待决问题、需要先看全局再逐个深挖时使用：把 Seed、材料或对话整理成问题地图，只选一个区域交给 grilling 一次一问，并记录纠正、验证与原型迭代。也用于继续已有地图、处理对已确认决定的明确纠正，或判断原型结果能否写回与关闭。不用于清晰的单点实现，不替代 grilling、prototype、research 或 to-spec。
 ---
 
 # Fragile Question Map
@@ -19,11 +19,28 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 - 不在共享理解形成前执行方案；不把 Question Map 变成 backlog、路线图或完整跨 Seed 编排系统。
 - 不得自动启动 `$fragile-skill-prototype`；只在用户确认运行模式与 A/B/C 交接后提供显式调用入口。
 
-持久 JSON 必须先读 [references/question-map-schema.md](references/question-map-schema.md)，完成后运行 validator；需要摘要时运行只读 `scripts/report-question-map.py`。
-
 ## Workflow
 
-### 1. 划定范围并导入
+### 1. 找到或新建地图
+
+地图存放在项目根目录（当前工作区）的 `.question-map/<question_map_id>/` 下：
+
+```text
+.question-map/<question_map_id>/
+├── question-map.json
+├── briefs/        # Prototype Run Brief
+└── seeds/         # 返回的 Seed
+```
+
+开始前先运行只读的 `python3 scripts/list-question-maps.py <project-root>`：
+
+- 已有与当前 destination 对应、`closure` 不是 `superseded` 的地图：继续它，先用 `report-question-map.py` 向用户复述当前区域与下一步；
+- 有多张候选：列出并让用户选，不要自己合并；
+- 没有：从 [references/examples/fragile-learn/](references/examples/fragile-learn/) 复制结构新建，先读 [references/question-map-schema.md](references/question-map-schema.md)。
+
+新地图必须声明 `schema_version`；Seed、Brief 引用写相对于地图文件的路径。用户指定了其他位置时照用户的。是否提交 `.question-map/` 由用户决定。
+
+### 2. 划定范围并导入
 
 先写清 `destination`、当前 `scope`、`out_of_scope` 和来源。输入是 `Skill Interaction Seed` 时，只有在需要时读取 [references/skill-interaction-seed-adapter.md](references/skill-interaction-seed-adapter.md)；核心流程只消费 adapter 产生的通用批次，不依赖某个学习 skill 的私有字段。
 
@@ -34,13 +51,13 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 - 用户纠正前后的原文、来源回合和受影响 Intent；
 - `possible_gaps` 单独保留，不自动导入 Grill。
 
-### 2. 生成候选区域
+### 3. 生成候选区域
 
 按 Intent 聚类、去重并识别依赖，向用户展示 2–3 个候选区域。每个区域只说明：要决定什么、已有证据、会影响哪一条范围或验收。把未选区域标为 sibling/later/deferred，保留理由；不要逐条请求确认。
 
 用户选择一个区域后，只有该区域进入当前 `grilling`；其他区域继续留在地图中。
 
-### 3. 分类并一次一问
+### 4. 分类并一次一问
 
 为每个问题记录稳定 ID、Intent、具体问题、证据要求、类型化关系、`confidence` 和生命周期字段：
 
@@ -53,7 +70,7 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 
 `confidence` 表示证据把握，不承担决策完成状态。`resolution` 保存结论、证据、确认时间和 supersession；`verification` 分开保存计划与执行结果。
 
-### 4. 处理明确纠正
+### 5. 处理明确纠正
 
 如果用户明确纠正已经确认的决定：
 
@@ -64,7 +81,7 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 
 未明确纠正时，不替用户把新想法解释成 supersession。
 
-### 5. 路由灵感与选择学习切片
+### 6. 路由灵感与选择学习切片
 
 单条突发灵感先原样保存 `raw` 和 `origin`，再只问一次：
 
@@ -74,15 +91,11 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 
 只有未解决的 Verify 同时直接阻塞决定/构建、且讨论和事实查找不足以回答时，才触发 Learning Prototype。每个 MVP slice 必须引用 baseline parent；MVP 是投影，不覆盖 baseline。
 
-### 6. 管理原型迭代交接
+### 7. 原型迭代交接
 
-当当前区域同时具备明确 delta 和 evidence goal 时，进入 `ready_for_rerun`。此时读取 [references/prototype-iteration-handoff.md](references/prototype-iteration-handoff.md)，推荐 `full` 或 `changed_slice` 并说明理由，等待用户确认后再生成独立 `Prototype Run Brief`。
+当前区域同时具备明确 delta 和 evidence goal 时，进入 `ready_for_rerun`，并**先读** [references/prototype-iteration-handoff.md](references/prototype-iteration-handoff.md)：它规定 full / changed_slice 推荐、Brief、A/B/C 交接、返回 Seed 写回、第 3 次重跑 WARNING，以及接受与整合验证的区分。未到这一步时不需要读。
 
-保存推荐与用户选择、active region、父 Seed、Brief 引用、iteration number、rerun count 和 A/B/C 交接。返回 Final Seed 必须与 parent、Brief、区域、run mode 和 iteration 对齐后才写回；Draft Seed 只能展示或检查。同一区域第 3 次重跑只发软 WARNING，由用户选择重新定义问题、补充证据、Park 或明确继续。
-
-用户接受与整合验证分开：没有最后变化之后的 full Seed 和通过的 integration Verify 时，只能是 `accepted_with_unverified_integration`；满足两项且用户明确接受时才是 `validated`。
-
-### 7. 回写与关闭
+### 8. 回写与关闭
 
 每次 Discuss、Verify、Fact、prototype 或实现结束后更新问题状态、resolution、verification、关系、baseline rationale 和 delta。当前 blocker 只表示现在仍阻塞；历史通过 supersession 和 delta 保留。
 
@@ -95,7 +108,7 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 
 关闭地图不等于所有 Verify 已通过；`possible_gaps` 也不自动阻止 `design_closed`。
 
-### 8. 委托下游
+### 9. 委托下游
 
 - 深度对齐：`grilling`
 - 高保真未知：`prototype`
@@ -108,25 +121,26 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 
 Question Map 保存设计、验证、来源和回写关系。执行依赖以 tracker 或下游 skill 的真实产物为真源，不用本地 JSON 声称 native edge 或真实副作用已经存在。
 
-## Validation
+## Scripts
+
+在本 Skill 目录运行（Python 3.8+，只用标准库）；除 validator 的退出码外都只读：
 
 ```bash
+python3 scripts/list-question-maps.py <project-root>
 python3 scripts/validate-question-map.py <question-map.json>
 python3 scripts/validate-prototype-run-brief.py <prototype-run-brief.md>
 python3 scripts/report-question-map.py <question-map.json>
 ```
 
-validator 的硬错误继续检查关系目标、Verify 证据门槛、MVP parent、delta target 和新 Intent 回挂；WARNING 只提示生命周期、closure、候选依赖或扩展字段风险，不阻断有效退出。报告脚本只读，不修改 JSON。
+每次写入地图后运行 validator。硬错误必须修正；WARNING 提示生命周期、closure、候选依赖或扩展字段风险，由你判断并告诉用户。validator 只证明结构与引用，不证明策略正确。
 
 ## Final response
 
-交付时说明：
+交付时用人话说明：
 
-- 当前 destination、选中的一个切片和候选区域概览；
-- 主要问题及其 mode/status；
-- 直接 blocker、非阻塞关系和当前 closure；
-- active region、rerun count、推荐/选择的运行模式、Brief 与 A/B/C 交接；
-- 用户 acceptance 与 integration 状态；
+- 地图位置、destination、选中的一个切片和候选区域概览；
+- 主要问题及其 mode/status，直接 blocker 与当前 closure；
 - 被 Park、sibling、rejected 或保留在 MVP 外的 Intent；
+- 进入原型迭代时：运行模式（推荐与选择）、Brief、A/B/C 交接、rerun count、acceptance 与 integration；
 - 下一步调用哪个 skill；
-- 是否运行 validator/report，以及它们实际证明的边界。
+- 是否运行了 validator/report，以及它们实际证明的边界。

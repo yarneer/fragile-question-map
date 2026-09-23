@@ -157,15 +157,24 @@ $fragile-question-map
 
 ## 验证地图与交接 Brief
 
-持久化 Question Map 前，先阅读 [Question Map Schema](references/question-map-schema.md)。完成后，在本 Skill 目录运行（需要 Python 3.8+，只依赖标准库，macOS / Linux / Windows 通用）：
+地图默认存放在项目根目录的 `.question-map/<question_map_id>/` 下，Brief 与返回的 Seed 放在同目录的 `briefs/`、`seeds/` 中。是否提交这个目录由你决定：提交后，设计决定与纠正的历史会跟着代码走。
+
+持久化 Question Map 前，先阅读 [Question Map Schema](references/question-map-schema.md)，并从 [完整示例](references/examples/fragile-learn/) 复制起步。地图中的 Seed、Brief 引用可以写相对于地图文件的路径，地图因此可以和这些文件一起移动或提交。完成后，在本 Skill 目录运行（需要 Python 3.8+，只依赖标准库，macOS / Linux / Windows 通用）：
 
 ```bash
+python3 scripts/list-question-maps.py <project-root>
 python3 scripts/validate-question-map.py <question-map.json>
 python3 scripts/validate-prototype-run-brief.py <prototype-run-brief.md>
 python3 scripts/report-question-map.py <question-map.json>
 ```
 
-前两个命令验证结构与交接约束；`report-question-map.py` 只读地生成摘要，不修改地图。硬错误涵盖关系目标、Verify 证据门槛、MVP parent、delta target 和新 Intent 回挂；WARNING 不阻止有效退出，但需要人工判断其生命周期或范围风险。
+`list-question-maps.py` 列出项目里已有的地图，按最近更新排序，供继续上次的工作；两个 validate 命令验证结构与交接约束；`report-question-map.py` 只读地生成摘要，不修改地图。硬错误涵盖关系目标、Verify 证据门槛、MVP parent、delta target 和新 Intent 回挂；WARNING 不阻止有效退出，但需要人工判断其生命周期或范围风险。
+
+修改脚本后，在仓库根目录运行契约测试：
+
+```bash
+python3 -m unittest discover -s tests
+```
 
 ## 与下游 Skill 的边界
 
@@ -186,8 +195,9 @@ Question Map 不声明下游 tracker 的 native edge，也不把真实执行副�
 fragile-question-map/
 ├── SKILL.md                  # 行为与约束的真源
 ├── references/               # Schema、Seed adapter 与原型交接规范
+│   └── examples/             # 可通过校验的完整示例（地图、Brief、Seed）
 ├── scripts/                  # 校验和只读报告脚本
-└── tests/                    # 本地契约测试；发布包不包含 fixtures
+└── tests/                    # 脚本的契约测试与 fixtures，CI 在三个系统上运行
 ```
 
 ## 约束

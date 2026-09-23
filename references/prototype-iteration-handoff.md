@@ -29,6 +29,8 @@ Draft Seed 只能展示或检查，不得更新 baseline、resolution、verifica
 - `checkpoint`、`restored_preconditions`、`changed_slice`；
 - `evidence_goal`、`completion_criteria`、`appetite`、`coverage_limit`。
 
+格式照 [examples/fragile-learn/prototype-run-brief.md](examples/fragile-learn/prototype-run-brief.md)。`parent_seed_ref` 写相对于 Brief 文件所在目录的路径，或绝对路径。
+
 运行：
 
 ```bash

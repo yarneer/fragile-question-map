@@ -7,7 +7,9 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from prototype_iteration_common import is_blank, parse_int, read_markdown_fields  # noqa: E402
+from prototype_iteration_common import (  # noqa: E402
+    is_blank, parse_int, read_markdown_fields, resolve_ref, use_utf8_output,
+)
 
 REQUIRED_FIELDS = [
     "brief_id", "status", "active_region_ref", "parent_seed_ref", "run_mode", "iteration_number",
@@ -17,6 +19,7 @@ REQUIRED_FIELDS = [
 
 
 def main():
+    use_utf8_output()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", help="prototype-run-brief.md")
     path = parser.parse_args().path
@@ -41,10 +44,9 @@ def main():
         errors.append(f"run_mode '{values['run_mode']}' is invalid")
     parent_seed_ref = values["parent_seed_ref"]
     if parent_seed_ref is not None:
-        if not os.path.isabs(parent_seed_ref):
-            errors.append("parent_seed_ref must be an absolute file path")
-        elif not os.path.isfile(parent_seed_ref):
-            errors.append(f"parent_seed_ref file does not exist: {parent_seed_ref}")
+        resolved = resolve_ref(parent_seed_ref, os.path.dirname(os.path.abspath(path)))
+        if not os.path.isfile(resolved):
+            errors.append(f"parent_seed_ref file does not exist: {parent_seed_ref} (resolved: {resolved})")
 
     iteration_number = 0
     if values["iteration_number"] is not None:
