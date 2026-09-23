@@ -19,7 +19,7 @@ description: 在开始或继续 Grill 前，从一个或多个 Seed、材料或�
 - 不在共享理解形成前执行方案；不把 Question Map 变成 backlog、路线图或完整跨 Seed 编排系统。
 - 不得自动启动 `$fragile-skill-prototype`；只在用户确认运行模式与 A/B/C 交接后提供显式调用入口。
 
-持久 JSON 必须先读 [references/question-map-schema.md](references/question-map-schema.md)，完成后运行 validator；需要摘要时运行只读 `scripts/report-question-map.py`。
+持久 JSON 必须先读 [references/question-map-schema.md](references/question-map-schema.md)，从 [references/examples/fragile-learn/](references/examples/fragile-learn/) 复制起步，声明 `schema_version`，文件引用写相对于地图文件的路径；完成后运行 validator；需要摘要时运行只读 `scripts/report-question-map.py`。
 
 ## Workflow
 

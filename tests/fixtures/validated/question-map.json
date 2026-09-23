@@ -1,0 +1,225 @@
+{
+  "schema_version": "0.3",
+  "question_map_id": "qm-test",
+  "destination": "d",
+  "scope": [
+    "s"
+  ],
+  "out_of_scope": [
+    "o"
+  ],
+  "source_lineage": [
+    {
+      "source_id": "v01",
+      "source_type": "seed",
+      "source_ref": "seed-v01.md",
+      "parent_source_ref": null,
+      "run_mode": "full",
+      "tested_slice": "whole path",
+      "status": "final",
+      "iteration_number": 1
+    },
+    {
+      "source_id": "v02",
+      "source_type": "seed",
+      "source_ref": "seed-v02.md",
+      "parent_source_ref": "seed-v01.md",
+      "run_mode": "full",
+      "tested_slice": "whole path",
+      "status": "final",
+      "active_region_ref": "N1",
+      "brief_ref": "brief.md",
+      "iteration_number": 2
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "title": "t",
+      "mode": "discuss",
+      "intent": "I1",
+      "question": "q?",
+      "evidence_needed": null,
+      "relations": {
+        "informs": [
+          "N1"
+        ]
+      },
+      "confidence": "supported",
+      "status": "superseded",
+      "resolution": {
+        "decision": "old",
+        "evidence": "e",
+        "confirmed_at": "2026-09-01T00:00:00Z",
+        "superseded_by": "Q2"
+      },
+      "verification": {
+        "status": "not_planned",
+        "plan": [],
+        "evidence": [],
+        "last_run_at": null
+      }
+    },
+    {
+      "id": "Q2",
+      "title": "t",
+      "mode": "discuss",
+      "intent": "I1",
+      "question": "q?",
+      "evidence_needed": null,
+      "relations": {},
+      "confidence": "supported",
+      "status": "resolved",
+      "resolution": {
+        "decision": "new",
+        "evidence": "e",
+        "confirmed_at": "2026-09-02T00:00:00Z",
+        "superseded_by": null
+      },
+      "verification": {
+        "status": "not_planned",
+        "plan": [],
+        "evidence": [],
+        "last_run_at": null
+      }
+    },
+    {
+      "id": "Q3",
+      "title": "t",
+      "mode": "verify",
+      "intent": "I1",
+      "question": "works?",
+      "evidence_needed": "full run",
+      "relations": {
+        "blocks_build": [
+          "N1"
+        ]
+      },
+      "confidence": "supported",
+      "status": "resolved",
+      "resolution": {
+        "decision": "yes",
+        "evidence": "run",
+        "confirmed_at": "2026-09-03T00:00:00Z",
+        "superseded_by": null
+      },
+      "verification": {
+        "status": "passed",
+        "plan": [
+          "run"
+        ],
+        "evidence": [
+          "seed-v02"
+        ],
+        "last_run_at": "2026-09-03T00:00:00Z"
+      }
+    }
+  ],
+  "insights": [
+    {
+      "id": "IR1",
+      "origin": "Q1",
+      "raw": "r",
+      "scope_relation": "bubble_up",
+      "mode": "discuss",
+      "relation": "informs",
+      "confidence": "provisional",
+      "is_new_intent": true,
+      "intent_id": "I1",
+      "rationale": "x"
+    }
+  ],
+  "possible_gaps": [
+    {
+      "id": "PG1",
+      "observation": "o",
+      "source_refs": [
+        "U1"
+      ],
+      "evidence_type": "model_inference",
+      "confidence": "provisional",
+      "reason_not_open": "r"
+    }
+  ],
+  "design_baseline": {
+    "id": "B",
+    "revision": 1,
+    "intents": [
+      {
+        "id": "I1",
+        "statement": "s",
+        "evidence": "e"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "N1",
+        "title": "t",
+        "status": "mvp",
+        "intent_ids": [
+          "I1"
+        ],
+        "parent_ids": [],
+        "rationale": "r"
+      }
+    ]
+  },
+  "mvp_seed": {
+    "id": "M",
+    "baseline_ref": "B@1",
+    "selected_nodes": [
+      {
+        "parent_id": "N1",
+        "slice": "s",
+        "acceptance": "a"
+      }
+    ],
+    "excluded_nodes": []
+  },
+  "delta": {
+    "id": "D",
+    "baseline_ref": "B@1",
+    "changes": [
+      {
+        "type": "invalidated",
+        "target_id": "Q1",
+        "before": "b",
+        "after": "a",
+        "evidence": "e",
+        "decision": "d"
+      }
+    ]
+  },
+  "iteration": {
+    "active_region_ref": "N1",
+    "state": "accepted",
+    "current_seed_ref": "seed-v02.md",
+    "last_full_seed_ref": "seed-v02.md",
+    "parent_seed_ref": "seed-v01.md",
+    "brief_ref": "brief.md",
+    "iteration_number": 2,
+    "rerun_count": 1,
+    "recommended_run_mode": "full",
+    "selected_run_mode": "full",
+    "recommendation_rationale": "r",
+    "recommended_handoff": "B",
+    "selected_handoff": "B"
+  },
+  "acceptance": {
+    "status": "validated",
+    "decision": "ok",
+    "confirmed_at": "2026-09-04T00:00:00Z",
+    "integration": {
+      "status": "passed",
+      "verification_question_id": "Q3",
+      "full_seed_ref": "seed-v02.md",
+      "last_change_iteration": 1
+    }
+  },
+  "closure": {
+    "status": "fully_verified",
+    "rationale": "done",
+    "remaining_verifications": [],
+    "next_skill": "to-spec"
+  }
+}

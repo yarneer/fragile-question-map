@@ -1,0 +1,247 @@
+{
+  "schema_version": "0.3",
+  "question_map_id": "qm-fragile-learn-interaction",
+  "destination": "改造 fragile-learn 的学习交互：AI 加速材料处理，但学习判断仍由用户完成",
+  "scope": [
+    "N4：学习深度、证据等级与停止条件"
+  ],
+  "out_of_scope": [
+    "HTML 与 PDF 阅读界面改造",
+    "重新讨论已收束的 AI 协作边界"
+  ],
+  "source_lineage": [
+    {
+      "source_id": "seed-v01",
+      "source_type": "skill_interaction_seed",
+      "source_ref": "seed-v01-final.md",
+      "parent_source_ref": null,
+      "run_mode": "full",
+      "tested_slice": "完整学习路径：导入材料到停止追问",
+      "status": "final",
+      "iteration_number": 1
+    },
+    {
+      "source_id": "seed-v02",
+      "source_type": "skill_interaction_seed",
+      "source_ref": "seed-v02-final.md",
+      "parent_source_ref": "seed-v01-final.md",
+      "run_mode": "changed_slice",
+      "tested_slice": "N4 追问链：确定目标层后按回答补一个变量",
+      "status": "final",
+      "active_region_ref": "N4",
+      "brief_ref": "prototype-run-brief.md",
+      "iteration_number": 2
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "title": "AI 能代劳什么",
+      "mode": "discuss",
+      "intent": "I1",
+      "question": "哪些材料处理可以交给 AI，哪些判断必须由用户亲自完成？",
+      "evidence_needed": null,
+      "relations": { "informs": ["N4"] },
+      "confidence": "supported",
+      "status": "resolved",
+      "resolution": {
+        "decision": "AI 负责检索、摘要和出题；是否理解、是否足够由用户判断",
+        "evidence": "用户反馈：AI 能加速材料处理，但不能替我学习",
+        "confirmed_at": "2026-09-10T10:00:00+08:00",
+        "superseded_by": null
+      },
+      "verification": { "status": "not_planned", "plan": [], "evidence": [], "last_run_at": null }
+    },
+    {
+      "id": "Q2",
+      "title": "固定四级追问链",
+      "mode": "discuss",
+      "intent": "I2",
+      "question": "是否每个知识点都按“复述 → 对比 → 改变一个条件 → 真实迁移”四级追问？",
+      "evidence_needed": null,
+      "relations": { "informs": ["N4"] },
+      "confidence": "supported",
+      "status": "superseded",
+      "resolution": {
+        "decision": "每个知识点固定走四级",
+        "evidence": "第一轮 Grill 共识",
+        "confirmed_at": "2026-09-11T15:00:00+08:00",
+        "superseded_by": "Q3"
+      },
+      "verification": { "status": "not_planned", "plan": [], "evidence": [], "last_run_at": null }
+    },
+    {
+      "id": "Q3",
+      "title": "按目标层补变量",
+      "mode": "discuss",
+      "intent": "I2",
+      "question": "追问深度如何决定，才能不多问也不漏问？",
+      "evidence_needed": null,
+      "relations": { "informs": ["N4"] },
+      "confidence": "supported",
+      "status": "resolved",
+      "resolution": {
+        "decision": "先确定用户需要保留判断权的目标层，再根据回答只补一个必要变量",
+        "evidence": "用户纠正：“我需要这么细吗？”",
+        "confirmed_at": "2026-09-12T09:30:00+08:00",
+        "superseded_by": null
+      },
+      "verification": { "status": "not_planned", "plan": [], "evidence": [], "last_run_at": null }
+    },
+    {
+      "id": "Q4",
+      "title": "先假设再补桥是否有效",
+      "mode": "verify",
+      "intent": "I3",
+      "question": "让用户先给出假设、再补一个桥接变量，是否比直接讲解更能暴露真实理解？",
+      "evidence_needed": "changed_slice 原型中，至少一次回答暴露了原本看不到的误解，且追问在证据满足后停止",
+      "relations": { "informs": ["N4"] },
+      "confidence": "provisional",
+      "status": "open",
+      "resolution": { "decision": null, "evidence": null, "confirmed_at": null, "superseded_by": null },
+      "verification": {
+        "status": "partial",
+        "plan": ["用 seed-v02 的 changed_slice 运行两组材料"],
+        "evidence": ["seed-v02：第一组暴露了一处误解，第二组未触发桥接"],
+        "last_run_at": "2026-09-15T20:00:00+08:00"
+      }
+    },
+    {
+      "id": "Q5",
+      "title": "难度梯度是否连续",
+      "mode": "verify",
+      "intent": "I2",
+      "question": "每次只加一个变量时，难度是否连续上升而不跳级？",
+      "evidence_needed": "至少三轮追问的难度评分单调上升，且没有一次跳过两个变量",
+      "relations": { "informs": ["N2"] },
+      "confidence": "uncertain",
+      "status": "deferred",
+      "resolution": { "decision": null, "evidence": null, "confirmed_at": null, "superseded_by": null },
+      "verification": { "status": "not_planned", "plan": [], "evidence": [], "last_run_at": null }
+    },
+    {
+      "id": "Q6",
+      "title": "整合验证",
+      "mode": "verify",
+      "intent": "I3",
+      "question": "N4 的变化并回完整路径后，整条学习交互是否仍然成立？",
+      "evidence_needed": "最后一次变化之后的 full Seed，覆盖导入、追问和停止",
+      "relations": { "informs": ["N4"] },
+      "confidence": "uncertain",
+      "status": "open",
+      "resolution": { "decision": null, "evidence": null, "confirmed_at": null, "superseded_by": null },
+      "verification": {
+        "status": "planned",
+        "plan": ["Q4 通过后，以 full 模式重跑一次完整路径"],
+        "evidence": [],
+        "last_run_at": null
+      }
+    },
+    {
+      "id": "Q7",
+      "title": "阅读界面分工",
+      "mode": "park",
+      "intent": "I1",
+      "question": "HTML、PDF 与 Agent 窗口各自负责什么？",
+      "evidence_needed": null,
+      "relations": { "informs": ["N3"] },
+      "confidence": "uncertain",
+      "status": "deferred",
+      "resolution": { "decision": null, "evidence": null, "confirmed_at": null, "superseded_by": null },
+      "verification": { "status": "not_planned", "plan": [], "evidence": [], "last_run_at": null }
+    }
+  ],
+  "insights": [
+    {
+      "id": "IR1",
+      "origin": "Q2",
+      "raw": "我需要这么细吗？",
+      "scope_relation": "bubble_up",
+      "mode": "discuss",
+      "relation": "informs",
+      "confidence": "supported",
+      "is_new_intent": false,
+      "intent_id": null,
+      "rationale": "不处理就无法确定 N4 的追问深度，属于对已确认决定的明确纠正"
+    }
+  ],
+  "possible_gaps": [
+    {
+      "id": "PG1",
+      "observation": "目标层的判断方式可能不适用于偏记忆型的材料",
+      "source_refs": ["seed-v02"],
+      "evidence_type": "model_inference",
+      "confidence": "provisional",
+      "reason_not_open": "用户没有把它设为当前问题，当前材料都是概念型"
+    }
+  ],
+  "design_baseline": {
+    "id": "fl-baseline",
+    "revision": 2,
+    "intents": [
+      { "id": "I1", "statement": "用户保留学习判断权，AI 只加速材料处理", "evidence": "用户反馈" },
+      { "id": "I2", "statement": "一次只问一个问题，每次只增加一个变量", "evidence": "用户反馈：问题不能一次抛出三个" },
+      { "id": "I3", "statement": "证据满足即停止追问", "evidence": "N4 讨论共识" }
+    ],
+    "nodes": [
+      { "id": "N1", "title": "用户认知责任与 AI 协作边界", "status": "mvp", "intent_ids": ["I1"], "parent_ids": [], "rationale": "已收束，作为其他区域的前提" },
+      { "id": "N2", "title": "一次一问的问题链与难度梯度", "status": "later", "intent_ids": ["I2"], "parent_ids": ["N1"], "rationale": "等待 N4 的验证结果" },
+      { "id": "N3", "title": "阅读优先界面与学习记录导航", "status": "deferred", "intent_ids": ["I1"], "parent_ids": ["N1"], "rationale": "不影响当前切片，先 Park" },
+      { "id": "N4", "title": "学习深度、证据等级与停止条件", "status": "mvp", "intent_ids": ["I2", "I3"], "parent_ids": ["N1"], "rationale": "当前选中的切片" }
+    ]
+  },
+  "mvp_seed": {
+    "id": "fl-mvp-1",
+    "baseline_ref": "fl-baseline@2",
+    "selected_nodes": [
+      { "parent_id": "N4", "slice": "按目标层追问并在证据满足时停止", "acceptance": "用户在一次学习中不被多问，也没有漏掉关键误解" }
+    ],
+    "excluded_nodes": ["N3"]
+  },
+  "delta": {
+    "id": "fl-delta-1",
+    "baseline_ref": "fl-baseline@2",
+    "changes": [
+      {
+        "type": "invalidated",
+        "target_id": "Q2",
+        "before": "每个知识点固定走四级追问",
+        "after": "先确定目标层，再根据回答补一个必要变量",
+        "evidence": "用户纠正：“我需要这么细吗？”",
+        "decision": "Q2 被 Q3 取代，保留原结论作为历史"
+      }
+    ]
+  },
+  "iteration": {
+    "active_region_ref": "N4",
+    "state": "evidence_received",
+    "current_seed_ref": "seed-v02-final.md",
+    "last_full_seed_ref": "seed-v01-final.md",
+    "parent_seed_ref": "seed-v01-final.md",
+    "brief_ref": "prototype-run-brief.md",
+    "iteration_number": 2,
+    "rerun_count": 1,
+    "recommended_run_mode": "changed_slice",
+    "selected_run_mode": "changed_slice",
+    "recommendation_rationale": "变化只影响 N4 的追问链，入口 checkpoint 可以无歧义恢复",
+    "recommended_handoff": "B",
+    "selected_handoff": "B"
+  },
+  "acceptance": {
+    "status": "pending",
+    "decision": null,
+    "confirmed_at": null,
+    "integration": {
+      "status": "not_verified",
+      "verification_question_id": "Q6",
+      "full_seed_ref": null,
+      "last_change_iteration": 2
+    }
+  },
+  "closure": {
+    "status": "active",
+    "rationale": "N4 讨论已形成共享理解，但 Q4 只有部分证据，整合验证尚未运行",
+    "remaining_verifications": ["Q4", "Q5", "Q6"],
+    "next_skill": "fragile-skill-prototype"
+  }
+}

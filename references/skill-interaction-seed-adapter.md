@@ -15,13 +15,13 @@ Adapter 输出与来源格式无关的批次：
   "source_lineage": [{
     "source_id": "seed-v02",
     "source_type": "skill_interaction_seed",
-    "source_ref": "绝对路径或稳定引用",
+    "source_ref": "相对于 Question Map 的路径、绝对路径或稳定引用",
     "parent_source_ref": null,
     "run_mode": "full",
     "tested_slice": "完整代表性路径",
     "status": "final",
     "active_region_ref": "N1",
-    "brief_ref": "绝对路径或 null",
+    "brief_ref": "相对于 Question Map 的路径、绝对路径或 null",
     "iteration_number": 2
   }],
   "chosen": [],
@@ -32,7 +32,7 @@ Adapter 输出与来源格式无关的批次：
   "insights": [],
   "possible_gaps": [],
   "rerun_signals": {
-    "parent_seed_ref": "绝对路径或稳定引用",
+    "parent_seed_ref": "相对于 Question Map 的路径、绝对路径或稳定引用",
     "run_mode_recommendation": "full | changed_slice",
     "tested_slice": "本次实际覆盖的切片",
     "starting_checkpoint": "起始 checkpoint",

@@ -7,7 +7,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from prototype_iteration_common import display, is_blank, is_int, parse_int, read_markdown_fields  # noqa: E402
+from prototype_iteration_common import (  # noqa: E402
+    use_utf8_output, display, is_blank, is_int, parse_int, read_markdown_fields, resolve_ref, same_ref,
+)
 
 ALLOWED_MODES = ("discuss", "verify", "fact", "park")
 ALLOWED_CONFIDENCE = ("provisional", "supported", "uncertain")
@@ -32,9 +34,12 @@ SEED_FIELDS = [
     "starting_checkpoint", "restored_preconditions",
 ]
 POST_BRIEF_STATES = ("brief_ready", "awaiting_seed", "evidence_received", "stalled", "accepted")
+SCHEMA_VERSIONS = ("0.1", "0.2", "0.3")
 
 errors = []
 warnings = []
+# Directory of the Question Map file; relative file references resolve against it.
+map_dir = os.getcwd()
 
 
 def add_error(message):
@@ -122,17 +127,20 @@ def add_unique_id(id_set, item_id, context):
 
 
 def read_referenced_markdown_fields(referenced_path, names, context):
-    if not isinstance(referenced_path, str) or not os.path.isabs(referenced_path):
-        add_error(f"{context} must be an absolute file path")
+    resolved = resolve_ref(referenced_path, map_dir)
+    if resolved is None:
+        add_error(f"{context} must be a file path")
         return None
-    if not os.path.isfile(referenced_path):
-        add_error(f"{context} file does not exist: {referenced_path}")
+    if not os.path.isfile(resolved):
+        add_error(f"{context} file does not exist: {referenced_path} (resolved: {resolved})")
         return None
     try:
-        return read_markdown_fields(referenced_path, names)
+        artifact = read_markdown_fields(resolved, names)
     except (OSError, UnicodeDecodeError) as exc:
         add_error(f"{context} could not be read: {exc}")
         return None
+    artifact["dir"] = os.path.dirname(resolved)
+    return artifact
 
 
 def assert_markdown_field_equals(fields, name, expected, context):
@@ -140,6 +148,15 @@ def assert_markdown_field_equals(fields, name, expected, context):
     if is_blank(actual):
         add_error(f"{context}.{name} must be non-empty")
     elif actual != expected:
+        add_error(f"{context}.{name} '{actual}' does not match '{display(expected)}'")
+
+
+def assert_markdown_ref_equals(artifact, name, expected, context):
+    """Compare a path field declared in a Markdown file against a path declared in the map."""
+    actual = artifact["values"].get(name)
+    if is_blank(actual):
+        add_error(f"{context}.{name} must be non-empty")
+    elif not same_ref(actual, artifact["dir"], expected, map_dir):
         add_error(f"{context}.{name} '{actual}' does not match '{display(expected)}'")
 
 
@@ -152,6 +169,7 @@ def validate(document):
     assert_known_properties(document, (
         "question_map_id", "destination", "scope", "out_of_scope", "source_lineage", "questions", "insights",
         "possible_gaps", "design_baseline", "mvp_seed", "delta", "iteration", "acceptance", "closure",
+        "schema_version",
     ), "root")
 
     require_text(document, "question_map_id", "root")
@@ -169,12 +187,23 @@ def validate(document):
     if mvp_seed is None:
         add_error("root.mvp_seed is required")
 
-    is_v03 = has(document, "iteration") or has(document, "acceptance")
-    is_v02_or_later = (is_v03 or has(document, "closure") or has(document, "possible_gaps")
-                       or has(document, "source_lineage"))
-    for question in questions:
-        if has(question, "status") or has(question, "resolution") or has(question, "verification"):
-            is_v02_or_later = True
+    has_v03_fields = has(document, "iteration") or has(document, "acceptance")
+    has_v02_fields = (has(document, "closure") or has(document, "possible_gaps") or has(document, "source_lineage")
+                      or any(has(q, "status") or has(q, "resolution") or has(q, "verification") for q in questions))
+    inferred_version = "0.3" if has_v03_fields else "0.2" if has_v02_fields else "0.1"
+    schema_version = inferred_version
+    if not has(document, "schema_version"):
+        add_warning(f"root.schema_version is not declared; inferred '{inferred_version}' from present fields")
+    else:
+        declared = get(document, "schema_version")
+        if declared not in SCHEMA_VERSIONS:
+            add_error(f"root.schema_version '{display(declared)}' is invalid; expected one of {', '.join(SCHEMA_VERSIONS)}")
+        else:
+            schema_version = declared
+            if declared < inferred_version:
+                add_error(f"root.schema_version '{declared}' is older than the fields present, which require '{inferred_version}'")
+    is_v03 = schema_version == "0.3"
+    is_v02_or_later = schema_version in ("0.2", "0.3")
 
     question_ids = set()
     for index, question in enumerate(questions):
@@ -511,7 +540,7 @@ def validate(document):
                     add_warning(f"selected MVP node '{target}' still depends on unresolved question '{display(question_id)}'")
 
     return len(questions), len(insights), len(intents), len(nodes), (
-        "v0.3" if is_v03 else "v0.2" if is_v02_or_later else "v0.1-legacy")
+        f"v{schema_version}" + ("-legacy" if schema_version == "0.1" else ""))
 
 
 def relates_to_region(question, active_region_ref, context):
@@ -556,13 +585,13 @@ def validate_iteration(iteration, questions, known_ids, source_lineage, delta_ch
         if handoff_value is not None and handoff_value not in ("A", "B", "C"):
             add_error(f"iteration handoff '{handoff_value}' is invalid")
 
-    current_source = [s for s in source_lineage if get(s, "source_ref") == current_seed_ref]
+    current_source = [s for s in source_lineage if same_ref(get(s, "source_ref"), map_dir, current_seed_ref, map_dir)]
     if len(current_source) != 1:
         add_error("iteration.current_seed_ref must match exactly one source_lineage source_ref")
     elif get(current_source[0], "status") != "final":
         add_error("iteration.current_seed_ref must reference a Final Seed")
     if last_full_seed_ref is not None:
-        last_full = [s for s in source_lineage if get(s, "source_ref") == last_full_seed_ref
+        last_full = [s for s in source_lineage if same_ref(get(s, "source_ref"), map_dir, last_full_seed_ref, map_dir)
                      and get(s, "run_mode") == "full" and get(s, "status") == "final"]
         if len(last_full) != 1:
             add_error("iteration.last_full_seed_ref must reference exactly one Final full Seed")
@@ -623,7 +652,7 @@ def validate_iteration(iteration, questions, known_ids, source_lineage, delta_ch
             if brief_fields["status"] != "final":
                 add_error("iteration Brief must have status final")
             assert_markdown_field_equals(brief_fields, "active_region_ref", active_region_ref, "iteration Brief")
-            assert_markdown_field_equals(brief_fields, "parent_seed_ref", parent_seed_ref, "iteration Brief")
+            assert_markdown_ref_equals(brief_artifact, "parent_seed_ref", parent_seed_ref, "iteration Brief")
             assert_markdown_field_equals(brief_fields, "run_mode", selected_run_mode, "iteration Brief")
             brief_iteration_number = parse_int(brief_fields["iteration_number"])
             if brief_iteration_number is None or brief_iteration_number != iteration_number:
@@ -639,13 +668,13 @@ def validate_iteration(iteration, questions, known_ids, source_lineage, delta_ch
         returned = current_source[0]
         if get(returned, "active_region_ref") != active_region_ref:
             add_error("returned Seed active_region_ref does not match iteration.active_region_ref")
-        if get(returned, "brief_ref") != brief_ref:
+        if not same_ref(get(returned, "brief_ref"), map_dir, brief_ref, map_dir):
             add_error("returned Seed brief_ref does not match iteration.brief_ref")
         if get(returned, "iteration_number") != iteration_number:
             add_error("returned Seed iteration_number does not match iteration.iteration_number")
         if get(returned, "run_mode") != selected_run_mode:
             add_error("returned Seed run_mode does not match iteration.selected_run_mode")
-        if get(returned, "parent_source_ref") != parent_seed_ref:
+        if not same_ref(get(returned, "parent_source_ref"), map_dir, parent_seed_ref, map_dir):
             add_error("returned Seed parent_source_ref does not match iteration.parent_seed_ref")
         seed_artifact = read_referenced_markdown_fields(get(returned, "source_ref"), SEED_FIELDS,
                                                         "returned Seed source_ref")
@@ -654,9 +683,9 @@ def validate_iteration(iteration, questions, known_ids, source_lineage, delta_ch
             brief_fields = brief_artifact["values"]
             if seed_fields["status"] != "final":
                 add_error("returned Seed Markdown must have status final")
-            assert_markdown_field_equals(seed_fields, "parent_seed_ref", parent_seed_ref, "returned Seed")
+            assert_markdown_ref_equals(seed_artifact, "parent_seed_ref", parent_seed_ref, "returned Seed")
             assert_markdown_field_equals(seed_fields, "run_mode", selected_run_mode, "returned Seed")
-            assert_markdown_field_equals(seed_fields, "input_brief_ref", brief_ref, "returned Seed")
+            assert_markdown_ref_equals(seed_artifact, "input_brief_ref", brief_ref, "returned Seed")
             assert_markdown_field_equals(seed_fields, "tested_slice", brief_fields["changed_slice"], "returned Seed")
             assert_markdown_field_equals(seed_fields, "starting_checkpoint", brief_fields["checkpoint"], "returned Seed")
             assert_markdown_field_equals(seed_fields, "restored_preconditions",
@@ -730,7 +759,7 @@ def validate_integration(integration, acceptance_status, decision, confirmed_at,
         if full_seed_ref is None:
             add_error("validated requires acceptance.integration.full_seed_ref")
         else:
-            full_sources = [s for s in source_lineage if get(s, "source_ref") == full_seed_ref
+            full_sources = [s for s in source_lineage if same_ref(get(s, "source_ref"), map_dir, full_seed_ref, map_dir)
                             and get(s, "run_mode") == "full" and get(s, "status") == "final"]
             if len(full_sources) != 1:
                 add_error("validated full_seed_ref must match exactly one Final full Seed")
@@ -739,7 +768,7 @@ def validate_integration(integration, acceptance_status, decision, confirmed_at,
                 last_change = last_change_iteration if is_int(last_change_iteration) else 0
                 if not is_int(full_iteration) or full_iteration <= last_change:
                     add_error("validated full Seed must occur after the last design change iteration")
-            if iteration is not None and get(iteration, "last_full_seed_ref") != full_seed_ref:
+            if iteration is not None and not same_ref(get(iteration, "last_full_seed_ref"), map_dir, full_seed_ref, map_dir):
                 add_error("validated full_seed_ref must equal iteration.last_full_seed_ref")
         if question_id is None:
             add_error("validated requires acceptance.integration.verification_question_id")
@@ -751,6 +780,7 @@ def validate_integration(integration, acceptance_status, decision, confirmed_at,
 
 
 def main():
+    use_utf8_output()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", help="question-map.json")
     path = parser.parse_args().path
@@ -765,6 +795,8 @@ def main():
         print(f"ERROR: invalid JSON: {exc}", file=sys.stderr)
         return 1
 
+    global map_dir
+    map_dir = os.path.dirname(os.path.abspath(path))
     question_count, insight_count, intent_count, node_count, schema = validate(document)
 
     for warning in warnings:

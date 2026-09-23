@@ -8,7 +8,7 @@ import sys
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from prototype_iteration_common import display, is_blank  # noqa: E402
+from prototype_iteration_common import display, is_blank, use_utf8_output  # noqa: E402
 
 
 def get(obj, name):
@@ -44,6 +44,7 @@ def preferred_display_value(obj, selected_name, recommended_name):
 
 
 def main():
+    use_utf8_output()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", help="question-map.json")
     path = parser.parse_args().path
@@ -112,6 +113,7 @@ def main():
         "",
         f"- Question Map: {display(get(document, 'question_map_id'))}",
         f"- Destination: {display(get(document, 'destination'))}",
+        f"- Schema version: {display_value(document, 'schema_version', 'not declared')}",
         f"- Closure: {closure_status}",
         f"- Next skill: {next_skill}",
         f"- Active region: {display_value(iteration, 'active_region_ref')}",

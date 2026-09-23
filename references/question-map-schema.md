@@ -1,10 +1,14 @@
 # Question Map Schema
 
-Question Map v0.3 在 v0.2 决策/验证生命周期上增加 Prototype Iteration Handoff。validator 继续接受 v0.1 legacy map 和 v0.2 map；只有出现 `iteration` 或 `acceptance` 时才启用 v0.3 条件门。
+Question Map v0.3 在 v0.2 决策/验证生命周期上增加 Prototype Iteration Handoff。新地图应以 `schema_version` 显式声明版本；validator 继续接受未声明版本的 v0.1 legacy map 和 v0.2 map，并按字段推断版本。
+
+完整、可通过校验的示例见 [examples/fragile-learn/](examples/fragile-learn/)：新建地图时从它复制并修改，而不是从本文档的片段拼装。
 
 ## Contents
 
 - [Artifact shape](#artifact-shape)
+- [Schema version](#schema-version)
+- [File references](#file-references)
 - [Question](#question)
 - [Relation semantics](#relation-semantics)
 - [Source lineage](#source-lineage)
@@ -19,6 +23,7 @@ Question Map v0.3 在 v0.2 决策/验证生命周期上增加 Prototype Iteratio
 
 ```json
 {
+  "schema_version": "0.3",
   "question_map_id": "qm-example",
   "destination": "当前工作的范围边界",
   "scope": ["当前解决什么"],
@@ -37,6 +42,24 @@ Question Map v0.3 在 v0.2 决策/验证生命周期上增加 Prototype Iteratio
 ```
 
 `questions`、`design_baseline` 和 `mvp_seed` 是必需字段；`insights`、`possible_gaps`、`source_lineage`、`delta` 和 `closure` 在 v0.1 可省略，v0.2 应显式提供。
+
+## Schema version
+
+`schema_version` 取值为 `"0.1" | "0.2" | "0.3"`，决定 validator 启用哪些必填门：
+
+- `"0.2"` 起，每个 Question 必须有 `status`、`resolution`、`verification`，根上必须有 `possible_gaps` 和 `closure`；
+- `"0.3"` 起，根上必须有 `iteration` 和 `acceptance`。
+
+未声明时，validator 按字段推断（出现 `iteration` / `acceptance` 即 v0.3，出现 `closure`、`possible_gaps`、`source_lineage` 或 Question 生命周期字段即 v0.2），并输出 WARNING。推断在漏写字段时会静默降级，所以新地图必须声明。声明版本低于已有字段所需版本是硬错误。
+
+## File references
+
+`source_ref`、`parent_source_ref`、`brief_ref`、`current_seed_ref`、`last_full_seed_ref`、`parent_seed_ref` 和 `full_seed_ref` 可以写：
+
+- 相对于 **本 Question Map 文件所在目录** 的路径（推荐，地图与 Seed、Brief 可以一起移动或提交）；
+- 绝对路径（`~` 会展开）。
+
+Brief 和 Seed Markdown 内的路径字段（`parent_seed_ref`、`input_brief_ref`）相对于 **该 Markdown 文件所在目录** 解析。validator 比较不同文件中的引用时，比较解析后的路径，而不是原始文本。
 
 ## Question
 
@@ -104,13 +127,13 @@ Allowed values:
 {
   "source_id": "seed-v02",
   "source_type": "skill_interaction_seed",
-  "source_ref": "绝对路径或稳定引用",
+  "source_ref": "seeds/seed-v02-final.md",
   "parent_source_ref": null,
   "run_mode": "full",
   "tested_slice": "完整代表性路径",
   "status": "final",
   "active_region_ref": "N1",
-  "brief_ref": "绝对路径或 null",
+  "brief_ref": "briefs/brief-n1-2.md",
   "iteration_number": 2
 }
 ```
@@ -177,9 +200,9 @@ Question Map 只保存最小迭代状态和稳定引用；完整 Brief 保存在
   "iteration": {
     "active_region_ref": "N1",
     "state": "ready_for_rerun",
-    "current_seed_ref": "/Users/you/seeds/seed-v01-final.md",
-    "last_full_seed_ref": "/Users/you/seeds/seed-v01-final.md",
-    "parent_seed_ref": "/Users/you/seeds/seed-v01-final.md",
+    "current_seed_ref": "seeds/seed-v01-final.md",
+    "last_full_seed_ref": "seeds/seed-v01-final.md",
+    "parent_seed_ref": "seeds/seed-v01-final.md",
     "brief_ref": null,
     "iteration_number": 2,
     "rerun_count": 0,
